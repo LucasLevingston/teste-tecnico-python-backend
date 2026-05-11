@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from scalar_fastapi import get_scalar_api_reference
 from starlette.status import (
     HTTP_422_UNPROCESSABLE_CONTENT,
     HTTP_500_INTERNAL_SERVER_ERROR,
@@ -25,19 +24,11 @@ app = FastAPI(
     title="API de Foco e Produtividade",
     description="Registre blocos de trabalho e receba um diagnóstico inteligente de produtividade.",
     version="0.1.0",
-    docs_url=None,  
-    redoc_url=None,  
+    docs_url="/docs",
+    redoc_url="/redoc",
     openapi_url="/openapi.json",
     lifespan=lifespan,
 )
-
-
-@app.get("/docs", include_in_schema=False)
-async def scalar_html():
-    return get_scalar_api_reference(
-        openapi_url=app.openapi_url,
-        title=app.title,
-    )
 
 
 app.post(

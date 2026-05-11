@@ -3,6 +3,7 @@ import sys
 
 import pytest
 from fastapi.testclient import TestClient
+from starlette.requests import Request
 
 
 def setup_project_root():
@@ -30,6 +31,24 @@ def create_records(client, records):
     for r in records:
         resp = client.post("/registro-foco", json=r)
         assert resp.status_code == 201
+
+
+def make_test_request():
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "path": "/",
+        "raw_path": b"/",
+        "query_string": b"",
+        "root_path": "",
+        "headers": [],
+        "client": ("testclient", 123),
+        "server": ("testserver", 80),
+    }
+    return Request(scope)
 
 
 def test_diagnostico_various_ranges(tmp_path, monkeypatch):
@@ -131,6 +150,6 @@ def test_generic_exception_handler_returns_500(tmp_path, monkeypatch):
         assert response.status_code == 500
         assert response.json()["detail"] == "Internal server error"
 
-    response = asyncio.run(generic_exception_handler(None, RuntimeError("boom")))
+    response = asyncio.run(generic_exception_handler(make_test_request(), RuntimeError("boom")))
     assert response.status_code == 500
     assert response.body is not None
