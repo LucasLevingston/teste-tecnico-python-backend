@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+echo "Running test suite before commit..."
+docker compose run --rm web_test pytest --cov=. --cov-report=term-missing -q

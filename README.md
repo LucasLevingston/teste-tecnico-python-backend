@@ -1,50 +1,142 @@
-# 🚀 Desafio Técnico: API de Foco e Produtividade
+# API de Foco e Produtividade
 
-O objetivo deste teste é criar o backend de um **"Log de Performance"**. Em vez de apenas registrar tarefas, queremos entender o **estado de fluxo** do desenvolvedor ou estudante durante suas atividades.
+API em Python com FastAPI para registrar sessões de foco e devolver um diagnóstico simples de produtividade.
 
-## 📅 Regras de Entrega
+## Visão Geral
 
-* Prazo: O projeto deve ser entregue até a próxima segunda-feira.
-* Uso de IA: O uso de ferramentas de Inteligência Artificial (ChatGPT, GitHub Copilot, etc.) é permitido.
-* Transparência: Caso utilize IA, você deve commitar os artefatos gerados junto ao repositório. Queremos entender como você utiliza essas ferramentas para acelerar seu fluxo de trabalho.
-* Faça o **fork desse projeto** e me avise quando terminar o [wouerner](https://www.linkedin.com/in/wouerner/) no linkedin. (necessario para pode acompanhar pelo github quem participou)
+- Código-fonte em inglês.
+- Mensagens e respostas da API em português.
+- Persistência em SQLite.
+- Documentação automática via Swagger / OpenAPI.
+- Testes executados em container separado.
 
-## 📝 O Contexto
-Muitas vezes trabalhamos muito, mas produzimos pouco. Você deve construir uma API simples que ajude o usuário a registrar seu nível de produtividade e, ao final, entregue um **diagnóstico inteligente** de como foi o seu período de trabalho.
+## Requisitos
 
-## 🛠 Requisitos Técnicos
-*   **Linguagem:** Python 3.x.
-*   **Framework:** À sua escolha (FastAPI, Flask, Django, etc).
-*   **Armazenamento:** Pode ser em memória (dicionários/listas) ou SQLite para simplicidade.
-*   **Diferencial:** Código limpo, bem comentado e presença de um `README.md` explicando como rodar o projeto.
+- Python 3.11+
+- Docker e Docker Compose
+- `make` opcional para atalhos locais
 
----
+## Como Executar
 
-## 🛣 Os Endpoints
+### Localmente
 
-### 1. `POST /registro-foco`
-O usuário deve enviar os dados de um bloco de trabalho recém-encerrado.
+Crie e ative o ambiente virtual:
 
-**Campos obrigatórios:**
-*   `nivel_foco`: Um valor inteiro de **1 a 5** (onde 1 é "muito distraído" e 5 é "estado de flow").
-*   `tempo_minutos`: Um inteiro representando quanto tempo durou a sessão.
-*   `comentario`: Uma string descrevendo o que foi feito ou o que causou distração.
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
 
-> **💡 Dica de Criatividade:** Sinta-se à vontade para adicionar campos extras, como `categoria` (coding, reunião, estudo), `data` ou `tags`.
+Instale as dependências:
 
-### 2. `GET /diagnostico-produtividade`
-Este endpoint deve retornar um resumo inteligente baseado em todos os registros salvos.
+```bash
+pip install -r requirements.txt
+```
 
-**O que deve retornar (JSON):**
-*   **Média do nível de foco:** A média aritmética de todos os registros.
-*   **Tempo total focado:** A soma de todos os minutos registrados.
-*   **Lógica Criativa (Diferencial):** Uma "mensagem de feedback" automática baseada nos dados analisados.
-    *   *Exemplo:* Se a média de foco for `< 3`, sugerir "Pausas mais longas e menos notificações". Se for `> 4`, "Você está em uma maratona produtiva de alto nível!".
+Inicie a API:
 
----
+```bash
+uvicorn main:app --reload
+```
 
-## 📊 O que será avaliado
-1.  **Organização do Código:** Estrutura de pastas e legibilidade.
-2.  **Manipulação de Dados:** Como você lida com tipos, cálculos e persistência.
-3.  **Tratamento de Erros:** Respostas adequadas para entradas inválidas (ex: nível de foco fora do range 1-5).
-4.  **Criatividade:** Pequenos detalhes que tornam a API mais útil para o usuário final.
+### Com Docker
+
+Build da imagem:
+
+```bash
+docker build -t foco-prod-api .
+```
+
+Execute o container:
+
+```bash
+docker run -p 8000:8000 foco-prod-api
+```
+
+### Com Docker Compose
+
+Suba o serviço de desenvolvimento:
+
+```bash
+docker compose up --build web
+```
+
+## Testes
+
+Rodar a suíte em container, com banco isolado para testes:
+
+```bash
+docker compose run --rm web_test pytest --cov=. --cov-report=term-missing -q
+```
+
+Atalho local:
+
+```bash
+make test
+```
+
+### Testes automáticos no commit
+
+O repositório inclui um hook de pre-commit que executa a suíte de testes antes de permitir o commit.
+
+Ative os hooks do repositório com:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Depois disso, cada `git commit` roda os testes automaticamente e bloqueia o commit se houver falha.
+
+### CI
+
+Também existe um workflow do GitHub Actions que executa os testes em cada push e pull request.
+
+## Documentação da API
+
+Com a aplicação em execução, acesse:
+
+- Swagger UI: `/docs`
+- ReDoc: `/redoc`
+- OpenAPI: `/openapi.json`
+
+## Endpoints
+
+### `POST /registro-foco`
+
+Registra uma sessão de foco.
+
+Campos aceitos:
+
+- `nivel_foco`: inteiro de 1 a 5
+- `tempo_minutos`: inteiro maior que 0
+- `comentario`: texto com 3 a 1000 caracteres
+- `categoria`: opcional, valores `coding`, `meeting`, `estudo` ou `outros`
+- `tags`: opcional, lista de strings
+
+### `GET /diagnostico-produtividade`
+
+Retorna o resumo consolidado dos registros salvos, incluindo:
+
+- média do nível de foco
+- tempo total registrado
+- quantidade de registros
+- mensagem de feedback
+- categorias com maior tempo acumulado
+
+## Armazenamento
+
+O banco padrão é um arquivo SQLite local (`data.db`). Em Docker Compose, há volumes separados para desenvolvimento e testes.
+
+## Estrutura de Saída
+
+As respostas da API são sempre em português. Exemplos de feedback incluem mensagens como:
+
+- `Você está em uma maratona produtiva de alto nível!`
+- `Ótimo foco! Continue com boas práticas e pequenas pausas.`
+- `Nível de foco baixo. Pausas estruturadas, bloquear notificações e revisar objetivos podem ajudar.`
+
+## Observações
+
+- O projeto foi desenvolvido com foco em organização, validação e cobertura de testes.
+- Caso queira limpar o ambiente de desenvolvimento, remova os volumes do Docker Compose e recrie os containers.
+- O código-fonte está em inglês; apenas as mensagens da API ficam em português.

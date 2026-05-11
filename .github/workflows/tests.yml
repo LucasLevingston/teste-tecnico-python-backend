@@ -1,0 +1,22 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build test image
+        run: docker compose build web_test
+
+      - name: Run test suite
+        run: docker compose run --rm web_test pytest --cov=. --cov-report=term-missing -q

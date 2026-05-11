@@ -1,0 +1,22 @@
+services:
+  web:
+    build: .
+    environment:
+      - DB_PATH=/data/dev.db
+    volumes:
+      - dev_data:/data
+    ports:
+      - "8000:8000"
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  web_test:
+    build: .
+    environment:
+      - DB_PATH=/data/test.db
+    volumes:
+      - test_data:/data
+    command: pytest -q
+
+volumes:
+  dev_data:
+  test_data:
